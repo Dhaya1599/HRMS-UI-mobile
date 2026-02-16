@@ -120,12 +120,16 @@ export default function AttendanceScreen() {
       {loading && page === 1 ? (
         <Loading fullScreen message="Loading attendance..." />
       ) : (
-        <FlatList
-          data={records}
-          renderItem={renderAttendanceCard}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.listContent}
-          onEndReached={loadMore}
+        <>
+          <View style={styles.mockNote}>
+            <Text style={styles.mockNoteText}>Mock data — no backend</Text>
+          </View>
+          <FlatList
+            data={records}
+            renderItem={renderAttendanceCard}
+            keyExtractor={(item) => item.id}
+            contentContainerStyle={styles.listContent}
+            onEndReached={loadMore}
           onEndReachedThreshold={0.5}
           ListFooterComponent={renderFooter}
           ListEmptyComponent={renderEmpty}
@@ -137,7 +141,8 @@ export default function AttendanceScreen() {
             />
           }
           scrollIndicatorInsets={{ right: 1 }}
-        />
+          />
+        </>
       )}
     </SafeAreaView>
   );
@@ -160,6 +165,15 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.background,
+  },
+  mockNote: {
+    paddingHorizontal: THEME.spacing.lg,
+    paddingTop: THEME.spacing.sm,
+  },
+  mockNoteText: {
+    fontSize: 11,
+    color: COLORS.textSecondary,
+    fontStyle: 'italic',
   },
   listContent: {
     paddingHorizontal: THEME.spacing.lg,

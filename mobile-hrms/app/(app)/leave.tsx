@@ -95,6 +95,9 @@ export default function LeaveScreen() {
         <Loading fullScreen message="Loading leave records..." />
       ) : (
         <>
+          <View style={styles.mockNote}>
+            <Text style={styles.mockNoteText}>Mock data — no backend</Text>
+          </View>
           <FlatList
             data={leaveRecords}
             renderItem={renderLeaveCard}
@@ -142,6 +145,15 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.background,
+  },
+  mockNote: {
+    paddingHorizontal: THEME.spacing.lg,
+    paddingTop: THEME.spacing.sm,
+  },
+  mockNoteText: {
+    fontSize: 11,
+    color: COLORS.textSecondary,
+    fontStyle: 'italic',
   },
   listContent: {
     paddingHorizontal: THEME.spacing.lg,

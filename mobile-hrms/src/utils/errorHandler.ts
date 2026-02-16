@@ -1,89 +1,53 @@
-import axios, { AxiosError } from 'axios';
-import { ApiResponse } from '@types/index';
+/**
+ * Error handling without axios or network. Mock-only.
+ */
 
 export interface AppError {
   message: string;
   code?: string;
   statusCode?: number;
-  details?: any;
+  details?: unknown;
 }
 
-export const handleApiError = (error: any): AppError => {
-  if (axios.isAxiosError(error)) {
-    const axiosError = error as AxiosError<ApiResponse>;
-
-    if (axiosError.response) {
-      // Server responded with error status
-      const { status, data } = axiosError.response;
-
-      return {
-        message: data?.error || 'An error occurred',
-        code: data?.error || `HTTP_${status}`,
-        statusCode: status,
-        details: data,
-      };
-    } else if (axiosError.request) {
-      // Request made but no response received
-      return {
-        message: 'No response from server. Please check your internet connection.',
-        code: 'NO_RESPONSE',
-        statusCode: 0,
-      };
-    }
-  }
-
+export const handleApiError = (error: unknown): AppError => {
   if (error instanceof Error) {
     return {
       message: error.message,
-      code: 'UNKNOWN_ERROR',
+      code: 'ERROR',
     };
   }
-
+  if (typeof error === 'object' && error !== null && 'message' in error) {
+    return {
+      message: String((error as { message: unknown }).message),
+      code: 'ERROR',
+    };
+  }
   return {
     message: 'An unexpected error occurred',
     code: 'UNKNOWN_ERROR',
   };
 };
 
-export const getErrorMessage = (error: any): string => {
-  const appError = handleApiError(error);
-  return appError.message;
+export const getErrorMessage = (error: unknown): string => {
+  return handleApiError(error).message;
 };
 
-export const isNetworkError = (error: any): boolean => {
-  if (axios.isAxiosError(error)) {
-    return !error.response && error.code === 'ECONNABORTED';
-  }
-  return false;
+export const isNetworkError = (_error: unknown): boolean => false;
+export const isAuthenticationError = (error: unknown): boolean => {
+  return handleApiError(error).statusCode === 401;
+};
+export const isAuthorizationError = (error: unknown): boolean => {
+  return handleApiError(error).statusCode === 403;
+};
+export const isNotFoundError = (error: unknown): boolean => {
+  return handleApiError(error).statusCode === 404;
+};
+export const isValidationError = (error: unknown): boolean => {
+  return handleApiError(error).statusCode === 400;
 };
 
-export const isAuthenticationError = (error: any): boolean => {
+export const logError = (error: unknown, context?: string): void => {
   const appError = handleApiError(error);
-  return appError.statusCode === 401;
-};
-
-export const isAuthorizationError = (error: any): boolean => {
-  const appError = handleApiError(error);
-  return appError.statusCode === 403;
-};
-
-export const isNotFoundError = (error: any): boolean => {
-  const appError = handleApiError(error);
-  return appError.statusCode === 404;
-};
-
-export const isValidationError = (error: any): boolean => {
-  const appError = handleApiError(error);
-  return appError.statusCode === 400;
-};
-
-export const logError = (error: any, context?: string): void => {
-  const appError = handleApiError(error);
-  const timestamp = new Date().toISOString();
-
-  if (context) {
-    console.error(`[${timestamp}] ${context}:`, appError);
-  } else {
-    console.error(`[${timestamp}] Error:`, appError);
-  }
+  const prefix = context ? `[${context}]` : '';
+  console.error(`${prefix}`, appError.message, appError);
 };

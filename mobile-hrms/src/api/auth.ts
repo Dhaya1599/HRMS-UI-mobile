@@ -1,6 +1,8 @@
-import { apiClient } from '@utils/api';
-import { API_CONFIG } from '@constants/api';
+/**
+ * Mock only — no backend. No network calls.
+ */
 import { ApiResponse, AuthResponse } from '@types/index';
+import { MOCK_USER } from '@/data/mockData';
 
 export interface LoginRequest {
   employeeId: string;
@@ -12,26 +14,31 @@ export interface RefreshTokenRequest {
 }
 
 export const authApi = {
-  async login(employeeId: string, password: string): Promise<ApiResponse<AuthResponse>> {
-    return apiClient.post<AuthResponse>(
-      API_CONFIG.AUTH.LOGIN,
-      {
-        employeeId,
-        password,
-      }
-    );
+  async login(_employeeId: string, _password: string): Promise<ApiResponse<AuthResponse>> {
+    return {
+      success: true,
+      data: {
+        user: { ...MOCK_USER },
+        accessToken: 'mock-token',
+        refreshToken: 'mock-refresh',
+        expiresIn: 3600,
+      },
+    };
   },
 
-  async logout(): Promise<ApiResponse<any>> {
-    return apiClient.post(API_CONFIG.AUTH.LOGOUT, {});
+  async logout(): Promise<ApiResponse<unknown>> {
+    return { success: true };
   },
 
-  async refreshToken(refreshToken: string): Promise<ApiResponse<AuthResponse>> {
-    return apiClient.post<AuthResponse>(
-      API_CONFIG.AUTH.REFRESH,
-      {
-        refreshToken,
-      }
-    );
+  async refreshToken(_refreshToken: string): Promise<ApiResponse<AuthResponse>> {
+    return {
+      success: true,
+      data: {
+        user: { ...MOCK_USER },
+        accessToken: 'mock-token',
+        refreshToken: 'mock-refresh',
+        expiresIn: 3600,
+      },
+    };
   },
 };

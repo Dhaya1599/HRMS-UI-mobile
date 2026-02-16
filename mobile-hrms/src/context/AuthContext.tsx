@@ -1,8 +1,7 @@
 import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
-import { User, AuthResponse } from '@types/index';
-import { apiClient } from '@utils/api';
+import { User } from '@types/index';
 import { secureStorage, appStorage, STORAGE_KEYS } from '@utils/storage';
-import { API_CONFIG } from '@constants/api';
+import { MOCK_USER } from '@/data/mockData';
 
 interface AuthState {
   user: User | null;
@@ -65,6 +64,7 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
 interface AuthContextType {
   state: AuthState;
   login: (employeeId: string, password: string) => Promise<void>;
+  loginDemo: () => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
 }
@@ -74,7 +74,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(authReducer, initialState);
 
-  // Check for existing token on app load
+  // Restore session from storage (mock mode — no API)
   useEffect(() => {
     const bootstrapAsync = async () => {
       try {
@@ -82,7 +82,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         const userData = await appStorage.get<User>(STORAGE_KEYS.USER_DATA);
 
         if (token && userData) {
-          await apiClient.setToken(token);
           dispatch({
             type: 'RESTORE_TOKEN',
             payload: { user: userData, token },
@@ -91,7 +90,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           dispatch({ type: 'SET_LOADING', payload: false });
         }
       } catch (error) {
-        console.error('Error restoring token:', error);
+        console.error('Error restoring session:', error);
         dispatch({ type: 'SET_LOADING', payload: false });
       }
     };
@@ -99,76 +98,52 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     bootstrapAsync();
   }, []);
 
-  const login = async (employeeId: string, password: string) => {
+  const login = async (_employeeId: string, _password: string) => {
     dispatch({ type: 'SET_LOADING', payload: true });
+    // Mock login: accept any credentials and use demo user
+    const user = { ...MOCK_USER, name: 'Demo User', employeeId: 'DEMO001' };
+    const accessToken = 'mock-access-token';
+    const refreshToken = 'mock-refresh-token';
+    await secureStorage.set('accessToken', accessToken);
+    await secureStorage.set('refreshToken', refreshToken);
+    await appStorage.set(STORAGE_KEYS.USER_DATA, user);
+    dispatch({
+      type: 'LOGIN_SUCCESS',
+      payload: { user, accessToken, refreshToken },
+    });
+  };
 
-    try {
-      const response = await apiClient.post<AuthResponse>(API_CONFIG.AUTH.LOGIN, {
-        employeeId,
-        password,
-      });
-
-      if (response.success && response.data) {
-        const { user, accessToken, refreshToken } = response.data;
-
-        // Save tokens
-        await secureStorage.set('accessToken', accessToken);
-        await secureStorage.set('refreshToken', refreshToken);
-        await appStorage.set(STORAGE_KEYS.USER_DATA, user);
-
-        // Set token in API client
-        await apiClient.setToken(accessToken);
-
-        dispatch({
-          type: 'LOGIN_SUCCESS',
-          payload: {
-            user,
-            accessToken,
-            refreshToken,
-          },
-        });
-      } else {
-        throw new Error(response.error || 'Login failed');
-      }
-    } catch (error: any) {
-      const message = error?.response?.data?.error || error?.message || 'Login failed';
-      dispatch({ type: 'LOGIN_ERROR', payload: message });
-      throw error;
-    }
+  const loginDemo = async () => {
+    const demoUser: User = { ...MOCK_USER };
+    const accessToken = 'mock-access-token';
+    const refreshToken = 'mock-refresh-token';
+    await secureStorage.set('accessToken', accessToken);
+    await secureStorage.set('refreshToken', refreshToken);
+    await appStorage.set(STORAGE_KEYS.USER_DATA, demoUser);
+    dispatch({
+      type: 'LOGIN_SUCCESS',
+      payload: { user: demoUser, accessToken, refreshToken },
+    });
   };
 
   const logout = async () => {
     dispatch({ type: 'SET_LOADING', payload: true });
-
-    try {
-      await apiClient.post(API_CONFIG.AUTH.LOGOUT, {});
-    } catch (error) {
-      console.error('Logout API error:', error);
-    } finally {
-      await secureStorage.clear();
-      await appStorage.remove(STORAGE_KEYS.USER_DATA);
-      dispatch({ type: 'LOGOUT' });
-    }
+    await secureStorage.clear();
+    await appStorage.remove(STORAGE_KEYS.USER_DATA);
+    dispatch({ type: 'LOGOUT' });
   };
 
   const refreshUser = async () => {
-    try {
-      const response = await apiClient.get<User>(API_CONFIG.PROFILE.GET);
-      if (response.success && response.data) {
-        await appStorage.set(STORAGE_KEYS.USER_DATA, response.data);
-        dispatch({
-          type: 'SET_USER',
-          payload: response.data,
-        });
-      }
-    } catch (error) {
-      console.error('Error refreshing user:', error);
+    const userData = await appStorage.get<User>(STORAGE_KEYS.USER_DATA);
+    if (userData) {
+      dispatch({ type: 'SET_USER', payload: userData });
     }
   };
 
   const value: AuthContextType = {
     state,
     login,
+    loginDemo,
     logout,
     refreshUser,
   };

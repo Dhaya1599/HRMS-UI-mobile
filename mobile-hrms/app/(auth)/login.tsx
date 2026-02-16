@@ -18,7 +18,7 @@ import { validateEmail, validatePassword } from '@utils/validators';
 import { Lock, Mail } from 'lucide-react-native';
 
 export default function LoginScreen() {
-  const { state, login } = useAuth();
+  const { state, login, loginDemo } = useAuth();
   const [employeeId, setEmployeeId] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -127,6 +127,15 @@ export default function LoginScreen() {
               fullWidth
               style={styles.loginButton}
             />
+
+            <Button
+              title="Continue with mock data"
+              onPress={loginDemo}
+              disabled={state.isLoading}
+              fullWidth
+              variant="outline"
+              style={styles.demoButton}
+            />
           </View>
 
           {/* Footer Section */}
@@ -199,6 +208,9 @@ const styles = StyleSheet.create({
   },
   loginButton: {
     marginTop: THEME.spacing.lg,
+  },
+  demoButton: {
+    marginTop: THEME.spacing.md,
   },
   footerSection: {
     alignItems: 'center',

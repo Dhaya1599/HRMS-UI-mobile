@@ -1,6 +1,8 @@
-import { apiClient } from '@utils/api';
-import { API_CONFIG } from '@constants/api';
 import { ApiResponse, LeaveType, LeaveStatus } from '@types/index';
+import {
+  MOCK_LEAVE_RECORDS,
+  MOCK_LEAVE_BALANCE,
+} from '@/data/mockData';
 
 export interface LeaveRequest {
   startDate: string;
@@ -28,44 +30,53 @@ export interface LeaveBalance {
   paternity?: number;
 }
 
+/** Mock implementation — no backend. */
 export const leaveApi = {
   async applyLeave(request: LeaveRequest): Promise<ApiResponse<LeaveRecord>> {
-    return apiClient.post<LeaveRecord>(
-      API_CONFIG.LEAVE.APPLY,
-      request
-    );
+    const record: LeaveRecord = {
+      id: `lv-mock-${Date.now()}`,
+      startDate: request.startDate,
+      endDate: request.endDate,
+      type: request.type,
+      status: LeaveStatus.PENDING,
+      reason: request.reason,
+      createdAt: new Date().toISOString(),
+    };
+    return { success: true, data: record };
   },
 
   async getLeaveRequests(
-    status?: string,
+    _status?: string,
     page: number = 1,
     pageSize: number = 20
   ): Promise<ApiResponse<{ records: LeaveRecord[]; total: number }>> {
-    const query = new URLSearchParams();
-    if (status) query.append('status', status);
-    query.append('page', page.toString());
-    query.append('pageSize', pageSize.toString());
-
-    return apiClient.get(
-      `${API_CONFIG.LEAVE.REQUESTS}?${query.toString()}`
-    );
+    const start = (page - 1) * pageSize;
+    const records = MOCK_LEAVE_RECORDS.slice(start, start + pageSize);
+    return {
+      success: true,
+      data: { records, total: MOCK_LEAVE_RECORDS.length },
+    };
   },
 
   async getLeaveBalance(): Promise<ApiResponse<LeaveBalance>> {
-    return apiClient.get<LeaveBalance>(API_CONFIG.LEAVE.BALANCE);
+    return { success: true, data: MOCK_LEAVE_BALANCE };
   },
 
   async approveLeave(id: string): Promise<ApiResponse<LeaveRecord>> {
-    return apiClient.put<LeaveRecord>(
-      `${API_CONFIG.LEAVE.APPROVE}/${id}/approve`,
-      {}
-    );
+    const record = MOCK_LEAVE_RECORDS.find((r) => r.id === id);
+    if (!record) return { success: false, error: 'Not found' };
+    return {
+      success: true,
+      data: { ...record, status: LeaveStatus.APPROVED, approvedBy: 'Demo Manager' },
+    };
   },
 
-  async rejectLeave(id: string, reason?: string): Promise<ApiResponse<LeaveRecord>> {
-    return apiClient.put<LeaveRecord>(
-      `${API_CONFIG.LEAVE.REJECT}/${id}/reject`,
-      { reason }
-    );
+  async rejectLeave(id: string, _reason?: string): Promise<ApiResponse<LeaveRecord>> {
+    const record = MOCK_LEAVE_RECORDS.find((r) => r.id === id);
+    if (!record) return { success: false, error: 'Not found' };
+    return {
+      success: true,
+      data: { ...record, status: LeaveStatus.REJECTED },
+    };
   },
 };

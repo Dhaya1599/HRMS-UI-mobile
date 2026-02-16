@@ -11,7 +11,15 @@ export const formatDate = (date: string | Date, formatStr: string = 'MMM dd, yyy
 
 export const formatTime = (time: string | Date, formatStr: string = 'HH:mm'): string => {
   try {
-    const dateObj = typeof time === 'string' ? parseISO(time) : time;
+    if (typeof time === 'object' && time instanceof Date) {
+      return format(time, formatStr);
+    }
+    const str = String(time);
+    if (!str) return '--';
+    if (/^\d{1,2}:\d{2}(:\d{2})?$/.test(str.trim())) {
+      return str.trim();
+    }
+    const dateObj = parseISO(str);
     return format(dateObj, formatStr);
   } catch (error) {
     return 'Invalid time';

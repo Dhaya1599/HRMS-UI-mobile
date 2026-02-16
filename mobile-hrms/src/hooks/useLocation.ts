@@ -2,13 +2,22 @@ import { useState, useEffect, useCallback } from 'react';
 import * as Location from 'expo-location';
 import { LocationCoordinates } from '@types/index';
 import { GEOFENCE_CONFIG } from '@constants/geofencing';
-import { getGeofenceStatus } from '@utils/geolocation';
+import { getGeofenceStatus as getGeofenceStatusFromCoords } from '@utils/geolocation';
+
+/** Fallback mock location (office) when device location is unavailable — for demo/mock UI */
+const MOCK_LOCATION: LocationCoordinates = {
+  latitude: GEOFENCE_CONFIG.OFFICE_LAT,
+  longitude: GEOFENCE_CONFIG.OFFICE_LNG,
+  accuracy: 20,
+  timestamp: Date.now(),
+};
 
 interface UseLocationReturn {
   location: LocationCoordinates | null;
   loading: boolean;
   error: string | null;
   hasPermission: boolean;
+  isMockLocation: boolean;
   requestPermission: () => Promise<boolean>;
   getCurrentLocation: () => Promise<LocationCoordinates | null>;
   getGeofenceStatus: () => string;
@@ -19,8 +28,8 @@ export const useLocation = (): UseLocationReturn => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hasPermission, setHasPermission] = useState(false);
+  const [isMockLocation, setIsMockLocation] = useState(false);
 
-  // Check permission on mount
   useEffect(() => {
     checkPermission();
   }, []);
@@ -53,25 +62,28 @@ export const useLocation = (): UseLocationReturn => {
     try {
       setLoading(true);
       setError(null);
+      setIsMockLocation(false);
 
       if (!hasPermission) {
         const granted = await requestPermission();
         if (!granted) {
-          setError('Location permission denied');
-          return null;
+          setError('Location permission denied. Using mock office location for demo.');
+          setLocation(MOCK_LOCATION);
+          setIsMockLocation(true);
+          return MOCK_LOCATION;
         }
       }
 
       const currentLocation = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.High,
-        timeInterval: 1000,
-        distanceInterval: 1,
+        accuracy: Location.Accuracy.Balanced,
+        maxAge: 30000,
+        timeout: 10000,
       });
 
       const coords: LocationCoordinates = {
         latitude: currentLocation.coords.latitude,
         longitude: currentLocation.coords.longitude,
-        accuracy: currentLocation.coords.accuracy || undefined,
+        accuracy: currentLocation.coords.accuracy ?? undefined,
         timestamp: currentLocation.timestamp,
       };
 
@@ -79,18 +91,18 @@ export const useLocation = (): UseLocationReturn => {
       return coords;
     } catch (err: any) {
       const errorMsg = err.message || 'Failed to get location';
-      setError(errorMsg);
-      console.error('Error getting location:', errorMsg);
-      return null;
+      setError(`Location unavailable. Using mock office location for demo.`);
+      setLocation(MOCK_LOCATION);
+      setIsMockLocation(true);
+      return MOCK_LOCATION;
     } finally {
       setLoading(false);
     }
   }, [hasPermission, requestPermission]);
 
   const getGeofenceStatus = useCallback((): string => {
-    if (!location) return 'Unknown';
-    const status = getGeofenceStatus(location);
-    return status;
+    if (!location) return 'unknown';
+    return getGeofenceStatusFromCoords(location);
   }, [location]);
 
   return {
@@ -98,6 +110,7 @@ export const useLocation = (): UseLocationReturn => {
     loading,
     error,
     hasPermission,
+    isMockLocation,
     requestPermission,
     getCurrentLocation,
     getGeofenceStatus,

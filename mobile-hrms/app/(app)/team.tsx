@@ -112,12 +112,16 @@ export default function TeamScreen() {
       {loading ? (
         <Loading fullScreen message="Loading team members..." />
       ) : (
-        <FlatList
-          data={members}
-          renderItem={renderTeamMember}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.listContent}
-          ListEmptyComponent={renderEmpty}
+        <>
+          <View style={styles.mockNote}>
+            <Text style={styles.mockNoteText}>Mock data — no backend</Text>
+          </View>
+          <FlatList
+            data={members}
+            renderItem={renderTeamMember}
+            keyExtractor={(item) => item.id}
+            contentContainerStyle={styles.listContent}
+            ListEmptyComponent={renderEmpty}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
@@ -126,7 +130,8 @@ export default function TeamScreen() {
             />
           }
           scrollIndicatorInsets={{ right: 1 }}
-        />
+          />
+        </>
       )}
     </SafeAreaView>
   );
@@ -162,6 +167,15 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.background,
+  },
+  mockNote: {
+    paddingHorizontal: THEME.spacing.lg,
+    paddingTop: THEME.spacing.sm,
+  },
+  mockNoteText: {
+    fontSize: 11,
+    color: COLORS.textSecondary,
+    fontStyle: 'italic',
   },
   listContent: {
     paddingHorizontal: THEME.spacing.lg,

@@ -1,6 +1,5 @@
-import { apiClient } from '@utils/api';
-import { API_CONFIG } from '@constants/api';
 import { ApiResponse, User } from '@types/index';
+import { MOCK_TEAM_MEMBERS, MOCK_TEAM_ATTENDANCE } from '@/data/mockData';
 
 export interface TeamMember extends User {
   currentStatus?: 'in' | 'out' | 'on_leave';
@@ -15,27 +14,28 @@ export interface TeamMemberAttendance {
   checkOutTime?: string;
 }
 
+/** Mock implementation — no backend. */
 export const teamApi = {
   async getTeamMembers(
-    page: number = 1,
-    pageSize: number = 20
+    _page: number = 1,
+    _pageSize: number = 20
   ): Promise<ApiResponse<{ members: TeamMember[]; total: number }>> {
-    return apiClient.get(
-      `${API_CONFIG.TEAM.MEMBERS}?page=${page}&pageSize=${pageSize}`
-    );
+    return {
+      success: true,
+      data: { members: [...MOCK_TEAM_MEMBERS], total: MOCK_TEAM_MEMBERS.length },
+    };
   },
 
   async getTeamMemberDetails(id: string): Promise<ApiResponse<TeamMember>> {
-    return apiClient.get<TeamMember>(`${API_CONFIG.TEAM.MEMBER_DETAILS}/${id}`);
+    const member = MOCK_TEAM_MEMBERS.find((m) => m.id === id);
+    if (!member) return { success: false, error: 'Not found' };
+    return { success: true, data: { ...member } };
   },
 
   async getTeamMemberAttendance(
-    id: string,
-    month?: string
+    _id: string,
+    _month?: string
   ): Promise<ApiResponse<TeamMemberAttendance[]>> {
-    const query = month ? `?month=${month}` : '';
-    return apiClient.get(
-      `${API_CONFIG.TEAM.MEMBER_ATTENDANCE}/${id}/attendance${query}`
-    );
+    return { success: true, data: [...MOCK_TEAM_ATTENDANCE] };
   },
 };

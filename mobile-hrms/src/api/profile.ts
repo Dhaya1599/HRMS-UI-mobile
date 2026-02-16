@@ -1,6 +1,5 @@
-import { apiClient } from '@utils/api';
-import { API_CONFIG } from '@constants/api';
 import { ApiResponse, User } from '@types/index';
+import { MOCK_USER } from '@/data/mockData';
 
 export interface UpdateProfileRequest {
   name?: string;
@@ -13,22 +12,20 @@ export interface ChangePasswordRequest {
   newPassword: string;
 }
 
+/** Mock implementation — no backend. Returns mock user; updates are no-op. */
 export const profileApi = {
   async getProfile(): Promise<ApiResponse<User>> {
-    return apiClient.get<User>(API_CONFIG.PROFILE.GET);
+    return { success: true, data: { ...MOCK_USER } };
   },
 
   async updateProfile(data: UpdateProfileRequest): Promise<ApiResponse<User>> {
-    return apiClient.put<User>(
-      API_CONFIG.PROFILE.UPDATE,
-      data
-    );
+    return {
+      success: true,
+      data: { ...MOCK_USER, ...data },
+    };
   },
 
-  async changePassword(request: ChangePasswordRequest): Promise<ApiResponse<any>> {
-    return apiClient.post(
-      API_CONFIG.PROFILE.CHANGE_PASSWORD,
-      request
-    );
+  async changePassword(_request: ChangePasswordRequest): Promise<ApiResponse<unknown>> {
+    return { success: true };
   },
 };
