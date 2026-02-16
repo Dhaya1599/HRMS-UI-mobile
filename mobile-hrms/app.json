@@ -1,0 +1,55 @@
+{
+  "expo": {
+    "name": "HRMS Mobile",
+    "slug": "hrms-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "image": "./assets/images/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#1a1f36"
+    },
+    "ios": {
+      "supportsTabletMode": true,
+      "bundleIdentifier": "com.hrms.mobile",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "This app needs location access to verify your check-in/out location",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "This app needs location access to verify your check-in/out location",
+        "NSCameraUsageDescription": "Camera access is needed for profile pictures"
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#1a1f36"
+      },
+      "package": "com.hrms.mobile",
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/images/favicon.png"
+    },
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow $(PRODUCT_NAME) to use your location."
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "your-project-id"
+      }
+    },
+    "owner": "your-username"
+  }
+}
